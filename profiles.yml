@@ -9,4 +9,5 @@ retail_platform:
       host: "https://adb-<your-workspace-id>.<region>.azuredatabricks.net"
       http_path: "/sql/1.0/warehouses/<your-sql-warehouse-id>"
       token: "{{ env_var('DATABRICKS_TOKEN') }}"
+      auth_type: token
       threads: 4
