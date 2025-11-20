@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-core:1.8.6
+    volumes:
+      - ./:/usr/app
+      - ~/.dbt:/root/.dbt
+    working_dir: /usr/app
+    environment:
+      DATABRICKS_TOKEN: ${DATABRICKS_TOKEN}
+    command: bash -lc "dbt --version && dbt deps && dbt debug"

@@ -1,0 +1,87 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Customer dimension with SCD Type 2 tracking and RFM metrics"
+    columns:
+      - name: customer_key
+        description: "Surrogate key for customer dimension"
+        tests:
+          - unique
+          - not_null
+      
+      - name: customer_id
+        description: "Natural key for customer"
+        tests:
+          - not_null
+      
+      - name: is_current
+        description: "Flag indicating current version of customer record"
+        tests:
+          - not_null
+  
+  - name: dim_products
+    description: "Product dimension with categorization"
+    columns:
+      - name: product_key
+        description: "Surrogate key for product dimension"
+        tests:
+          - unique
+          - not_null
+      
+      - name: product_id
+        description: "Natural key for product"
+        tests:
+          - unique
+          - not_null
+  
+  - name: fct_orders
+    description: "Order-level fact table"
+    columns:
+      - name: order_key
+        description: "Surrogate key for orders"
+        tests:
+          - unique
+          - not_null
+      
+      - name: order_id
+        description: "Natural key for orders"
+        tests:
+          - unique
+          - not_null
+      
+      - name: customer_id
+        description: "Customer foreign key"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      
+      - name: total_amount
+        description: "Order total amount"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+  
+  - name: fct_daily_sales
+    description: "Daily aggregated sales metrics (incremental)"
+    columns:
+      - name: date_day
+        description: "Date of sales activity"
+        tests:
+          - unique
+          - not_null
+      
+      - name: total_orders
+        description: "Number of orders for the day"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      
+      - name: total_revenue
+        description: "Total revenue for the day"
+        tests:
+          - not_null

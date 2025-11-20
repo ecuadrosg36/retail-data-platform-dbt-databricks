@@ -1,0 +1,12 @@
+retail_platform:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      # If you use Unity Catalog, set your catalog here. Otherwise keep hive_metastore.
+      catalog: hive_metastore
+      schema: retail_dev
+      host: "https://adb-<your-workspace-id>.<region>.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/<your-sql-warehouse-id>"
+      token: "{{ env_var('DATABRICKS_TOKEN') }}"
+      threads: 4

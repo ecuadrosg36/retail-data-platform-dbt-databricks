@@ -1,0 +1,36 @@
+version: 2
+
+exposures:
+  - name: sales_dashboard
+    type: dashboard
+    maturity: high
+    url: https://your-bi-tool.com/dashboards/sales
+    description: >
+      Executive sales dashboard showing daily revenue, order trends, 
+      and customer segments. Updated hourly.
+    
+    depends_on:
+      - ref('fct_daily_sales')
+      - ref('dim_customers')
+      - ref('dim_products')
+      - ref('fct_orders')
+    
+    owner:
+      name: Analytics Team
+      email: analytics@company.com
+  
+  - name: customer_analytics
+    type: dashboard
+    maturity: medium
+    url: https://your-bi-tool.com/dashboards/customers
+    description: >
+      Customer behavior analytics including RFM segmentation,
+      lifetime value, and churn indicators.
+    
+    depends_on:
+      - ref('dim_customers')
+      - ref('int_customer_metrics')
+    
+    owner:
+      name: Marketing Team
+      email: marketing@company.com

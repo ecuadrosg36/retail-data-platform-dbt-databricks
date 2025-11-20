@@ -1,0 +1,7 @@
+customer_id,customer_name,email,country
+C001,Ana Gomez,ana.gomez@example.com,PE
+C002,Luis Perez,luis.perez@example.com,AR
+C003,Maria Ruiz,maria.ruiz@example.com,CL
+C004,Jose Lopez,jose.lopez@example.com,PE
+C005,Camila Diaz,camila.diaz@example.com,CO
+C006,Carlos Silva,carlos.silva@example.com,MX
