@@ -63,16 +63,14 @@ jobs:
           DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         run: |
           dbt debug --target ci
-        continue-on-error: true
       
-      - name: Run dbt build (Slim CI)
+      - name: Run dbt build (CI)
         env:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         run: |
-          dbt build --select state:modified+ --state ./target --target ci
-        continue-on-error: true
+          dbt build --target ci
 
   docs:
     name: Generate & Deploy dbt Docs

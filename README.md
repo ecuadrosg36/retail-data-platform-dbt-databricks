@@ -41,36 +41,45 @@ BI Dashboards & Reports
 
 ### Setup
 
+### Installation
+
 ```bash
-# Clone and install
+# 1. Clone the repository
 git clone <repo>
 cd retail_data_platform_dbt_databricks
+
+# 2. Set up a virtual environment (Recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install core dependencies
 pip install -r requirements.txt
 
-# Install dbt packages
+# 4. Install dbt packages
 dbt deps
 
-# Configure Databricks connection
-export DATABRICKS_TOKEN=your_token_here
-# Edit profiles.yml with your host and http_path
+# 5. Environment Configuration
+# Set your Databricks credentials as environment variables
+export DATABRICKS_HOST="your-databricks-host.cloud.databricks.com"
+export DATABRICKS_HTTP_PATH="your-sql-warehouse-http-path"
+export DATABRICKS_TOKEN="your-personal-access-token"
 ```
 
-### Run Pipeline
+### Execution Step-by-Step
 
 ```bash
-# Load seed data
+# 1. Verify connection
+dbt debug
+
+# 2. Seed raw data into Bronze layer
+# This loads CSV files from seeds/ into Delta tables
 dbt seed
 
-# Run all models
-dbt run
-
-# Run tests
-dbt test
-
-# Build everything (run + test)
+# 3. Build the pipeline (Run + Test)
+# This executes staging, intermediate, and marts models
 dbt build
 
-# Generate documentation
+# 4. Generate and serve documentation
 dbt docs generate
 dbt docs serve
 ```
