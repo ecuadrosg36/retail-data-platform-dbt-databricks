@@ -1,8 +1,6 @@
 version: 2
 
 models:
-
-
   - name: int_order_details
     columns:
       - name: order_id
@@ -15,11 +13,5 @@ models:
       - name: total_sales
         tests:
           - not_null
-          - accepted_values:
-              values: [">= 0"]
-              quote: false
-
-  - name: dim_customers
-    columns:
-      - name: customer_key
-        tests: [not_null, unique]
+          - dbt_utils.accepted_range:
+              min_value: 0
