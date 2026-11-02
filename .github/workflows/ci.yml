@@ -59,12 +59,26 @@ jobs:
       - name: Install dbt packages
         run: |
           dbt deps
+
+      - name: Check project (models, refs, tests)
+        env:
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST || 'not-set.cloud.databricks.com' }}
+          DATABRICKS_HTTP_PATH: ${{ env.DATABRICKS_HTTP_PATH || '/sql/not-set' }}
+          DATABRICKS_TOKEN: ${{ env.DATABRICKS_TOKEN || 'not-set' }}
+        run: |
+          dbt parse --target ci
+
+      - name: Skip build when Databricks is not set up
+        if: env.DATABRICKS_TOKEN == ''
+        run: echo "::notice::No Databricks credentials set, so dbt build is skipped."
       
       - name: Run dbt debug
+        if: env.DATABRICKS_TOKEN != ''
         run: |
           dbt debug --target ci
       
       - name: Run dbt build (CI)
+        if: env.DATABRICKS_TOKEN != ''
         run: |
           dbt build --target ci
 
@@ -72,7 +86,7 @@ jobs:
     name: Generate & Deploy dbt Docs
     runs-on: ubuntu-latest
     needs: [test]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.DATABRICKS_HOST != ''
     env:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN || vars.DATABRICKS_TOKEN }}
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST || vars.DATABRICKS_HOST }}
