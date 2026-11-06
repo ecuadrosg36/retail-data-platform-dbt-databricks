@@ -1,6 +1,6 @@
 # Retail Data Platform - dbt + Databricks
 
-A **production-grade retail analytics platform** built with dbt Core and Databricks, implementing the Medallion Architecture (Bronze → Silver → Gold).
+A **retail analytics** dbt project built with dbt Core and Databricks, implementing the Medallion Architecture (Bronze → Silver → Gold).
 
 ![dbt](https://img.shields.io/badge/dbt-1.8.6-orange)
 ![Databricks](https://img.shields.io/badge/Databricks-Delta%20Lake-red)
@@ -8,21 +8,30 @@ A **production-grade retail analytics platform** built with dbt Core and Databri
 
 ## 🌟 Features
 
-- **Medallion Architecture**: Bronze (seeds) → Silver (staging/intermediate) → Gold (marts)
-- **20+ dbt Models**: Staging, intermediate, dimensions, and facts
-- **Comprehensive Testing**: >80% coverage with dbt_expectations and dbt_utils
-- **Incremental Models**: Optimized for large-scale data processing
-- **SCD Type 2**: Snapshot-based slowly changing dimensions
-- **Databricks Optimizations**: Delta Lake, OPTIMIZE, Z-ORDER clustering
-- **CI/CD Pipeline**: GitHub Actions with slim CI and automated docs
-- **Data Observability**: Elementary dbt integration for monitoring
-- **BI Exposures**: Documented dashboard dependencies
+### Working today
+
+- **Medallion layers**: Bronze (seeds) → Silver (staging/intermediate) → Gold (marts)
+- **13 dbt models**: 3 staging, 4 intermediate, 3 dimensions, 3 facts
+- **Tests**: generic tests plus dbt_utils and dbt_expectations checks on sources and models
+- **Incremental facts**: marts facts use the `merge` strategy
+- **Databricks settings**: marts are Delta tables, with `OPTIMIZE` after each build and `ZORDER` on dimension keys
+- **Snapshot**: `customers_snapshot` tracks customer changes (SCD Type 2)
+- **Exposures**: 2 BI dashboards documented in `models/exposures.yml`
+- **CI**: GitHub Actions runs SQLFluff and `dbt parse` on every push
+
+### Not finished yet
+
+- **dim_customers** reads `stg_customers`, not the snapshot, so it holds the current version only (it is not SCD Type 2)
+- **Freshness**: thresholds are set on the sources, but there is no `loaded_at_field`, so dbt doesn't check them
+- **Seeds**: `country_codes` and `currency_exchange_rates` are loaded but no model uses them
+- **Elementary**: the package is installed, but nothing is configured, so there is no monitoring yet
+- **CI**: SQLFluff findings don't fail the build (`continue-on-error`). `dbt build` and the docs deploy only run when Databricks credentials are set as repo secrets, and they aren't yet
 
 ## 📊 Data Flow
 
 ```
 Seeds (Bronze)
-    ↓ source freshness checks
+    ↓
 Staging (Silver) - Basic transformations
     ↓ joins & enrichment
 Intermediate (Silver) - Business logic (RFM, metrics)
@@ -45,8 +54,8 @@ BI Dashboards & Reports
 
 ```bash
 # 1. Clone the repository
-git clone <repo>
-cd retail_data_platform_dbt_databricks
+git clone https://github.com/ecuadrosg36/retail-data-platform-dbt-databricks.git
+cd retail-data-platform-dbt-databricks
 
 # 2. Set up a virtual environment (Recommended)
 python -m venv venv
@@ -94,30 +103,33 @@ dbt docs serve
 │   │   └── stg_products.sql
 │   ├── intermediate/      # Business logic layer
 │   │   ├── int_orders_enriched.sql
+│   │   ├── int_order_details.sql
+│   │   ├── int_customer_orders.sql
 │   │   └── int_customer_metrics.sql
 │   └── marts/            # Gold layer (analytics-ready)
 │       ├── dimensions/
-│       │   ├── dim_customers.sql  # SCD Type 2
+│       │   ├── dim_customers.sql  # current version, RFM segments
 │       │   ├── dim_products.sql
 │       │   └── dim_dates.sql
-│       └── facts/
-│           ├── fct_orders.sql
-│           └── fct_daily_sales.sql  # Incremental
+│       ├── facts/
+│       │   ├── fct_orders.sql
+│       │   └── fct_daily_sales.sql  # Incremental
+│       └── sales/
+│           └── fct_sales.sql
 ├── snapshots/            # SCD Type 2 tracking
 ├── macros/               # Custom macros
 ├── seeds/                # Sample data (Bronze)
-├── tests/                # Custom tests
+├── analysis/             # Ad-hoc SQL (CLV, monthly trend, top products)
 └── packages.yml          # dbt packages
 ```
 
 ## 🧪 Testing
 
-The project includes comprehensive data quality tests:
+Tests are declared in the schema YAML files:
 
-- **Generic Tests**: unique, not_null, accepted_values, relationships
-- **dbt_expectations**: Range checks, regex validation, row count monitoring
-- **dbt_utils**: Expression validation, equality checks, recency tests
-- **Custom Tests**: Business rule validation
+- **Generic tests**: unique, not_null, accepted_values, relationships
+- **dbt_expectations**: range and regex checks on the sources
+- **dbt_utils**: `accepted_range` and `expression_is_true` checks
 
 ```bash
 # Run all tests
@@ -125,9 +137,6 @@ dbt test
 
 # Run tests for specific model
 dbt test --select dim_customers
-
-# Run only schema tests
-dbt test --data
 ```
 
 ## 🎯 Key Models
@@ -152,12 +161,10 @@ dbt test --data
 
 The project leverages Databricks-specific features:
 
-- **Delta Lake**: All models use Delta format
-- **OPTIMIZE**: Post-hooks for automatic file compaction
-- **Z-ORDER**: Clustering on primary keys
-- **Liquid Clustering**: (Databricks Runtime 13+)
-- **Incremental Strategies**: Merge for efficient updates
--**Photon**: Optimized for analytical queries
+- **Delta Lake**: marts are written as Delta tables
+- **OPTIMIZE**: post-hooks compact files after each build
+- **Z-ORDER**: dimensions are clustered on their key column
+- **Incremental strategy**: facts use `merge`
 
 ## 📚 Documentation
 
@@ -165,30 +172,22 @@ Documentation is generated automatically and includes:
 
 - Model descriptions and lineage
 - Column-level documentation
-- Business glossary
-- Test coverage
 - BI dashboard dependencies (exposures)
 
 Access docs at: `http://localhost:8080` after running `dbt docs serve`
 
 ## 🔄 CI/CD
 
-GitHub Actions workflow includes:
+The GitHub Actions workflow:
 
-1. **SQL Linting** (sqlfl uff)
-2. **Slim CI** (only modified models)
-3. **Automated Testing** (all models + tests)
-4. **Docs Deployment** (GitHub Pages)
+1. **SQL linting** with SQLFluff (reports only, doesn't fail the build)
+2. **`dbt parse`** checks models, refs and tests without a warehouse
+3. **`dbt build`** runs only when Databricks secrets are set
+4. **Docs deployment** to GitHub Pages, on `main`, only when Databricks is set up
 
 ## 📈 Monitoring
 
-Elementary dbt integration provides:
-
-- Data anomaly detection
-- Schema change tracking
-- Test failure alerts
-- Lineage visualization
-- Slack/email notifications
+Not set up yet. The Elementary package is in `packages.yml`, but its models and alerts aren't configured.
 
 ## 🛠️ Development
 
